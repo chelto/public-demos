@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: adtech-tools
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-leader-deployment
+  namespace: adtech-tools
+  labels:
+    app: locust-leader
+    role: adtech-testing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust-leader
+  template:
+    metadata:
+      labels:
+        app: locust-leader
+    spec:
+      containers:
+      - name: locust-web-ui
+        image: chetlo/locustchet
+        args: ["--master","--web-auth","dGVzdGVyOnRlc3Rlcg=="]
+        ports:
+          - containerPort: 8089
+          - containerPort: 5557
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: web-auth-password
+            valueFrom:
+              secretKeyRef:
+                name: locust-secret
+                key: admin-user
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-worker-deployment
+  namespace: adtech-tools
+spec:
+  selector:
+    matchLabels:
+      app: locust-worker
+  template:
+    metadata:
+      labels:
+        app: locust-worker
+    spec:
+      containers:
+      - name: locust-worker
+        image: chetlo/locustchet
+        args: ["--worker", "--master-host=locust-leader-svc"]
+        ports:
+        - containerPort: 5557
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "1"
+          limits:
+            memory: "1024Mi"
+            cpu: "1.5"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-leader-svc
+  namespace: adtech-tools
+  labels:
+    app.kubernetes.io/name: locust-leader-svc
+    app.kubernetes.io/instance: locust-leader-svc
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  selector:
+    app: locust-leader
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8089
+      name: leader-ui-port
+    - protocol: TCP
+      port: 5557
+      targetPort: 5557
+      name: leader-listener
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-worker-svc
+  namespace: adtech-tools
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  selector:
+    app: locust-worker
+  ports:
+    - protocol: TCP
+      port: 5557
+      targetPort: 5557
+      name: worker-listener

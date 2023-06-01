@@ -20,14 +20,12 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: k8s-locust-dev.adtechengine.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: locust-leader-svc
-            port:
-              name: leader-ui-port
-        path: /
-        pathType: Prefix
-    
+    - http:
+        paths:
+          - path: /locust-dev
+            pathType: Prefix
+            backend:
+              service:
+                name: locust-leader-svc
+                port:
+                  name: leader-ui-port

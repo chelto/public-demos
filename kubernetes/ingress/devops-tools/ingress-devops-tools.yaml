@@ -16,17 +16,16 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-2:00000000000:certificate/dee83264-3cfa-400a-bf13-b5c8af967590
     alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:eu-west-2:00000000000:regional/webacl/ExternalACL-prod/c8d5c74e-813d-4050-a9ab-8bb6f22f9489
     alb.ingress.kubernetes.io/inbound-cidrs: 0.0.0.0/0
-    
+
 spec:
   ingressClassName: alb
   rules:
-  - host: k8s-jenkins-dev.mysite.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: jenkins-svc
-            port:
-              name: jenkins-port
-        path: /
-        pathType: Prefix
+    - http:
+        paths:
+          - path: /jenkins
+            pathType: Prefix
+            backend:
+              service:
+                name: jenkins-svc
+                port:
+                  name: jenkins-port

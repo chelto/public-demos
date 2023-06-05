@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata:
+  name: aws-alb-ingress
+  namespace: devops-tools
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: kubernetes-adtech-alb
+    alb.ingress.kubernetes.io/group.name: adtech-tests
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/tags: Product=demoproduct,Terraform=false,Project=EKS_Expiriments,Environment=Training
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-1-2017-01
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-2:00000000000:certificate/dee83264-3cfa-400a-bf13-b5c8af967590
+    alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:eu-west-2:00000000000:regional/webacl/ExternalACL-prod/c8d5c74e-813d-4050-a9ab-8bb6f22f9489
+    alb.ingress.kubernetes.io/inbound-cidrs: 0.0.0.0/0
+    
+spec:
+  ingressClassName: alb
+  rules:
+  - host: k8s-locust-dev.mysite.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: jenkins-svc
+            port:
+              name: jenkins-port
+        path: /
+        pathType: Prefix
